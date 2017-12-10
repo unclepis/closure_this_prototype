@@ -165,3 +165,82 @@
     var cat1 = new Cat('Eric','red');
 	var cat2 = new Cat('Cindy','blue');
 	cat1.spice; // 'animals' 
+
+### ------------------重点------------------------
+### 4.原型链继承
+        
+        function Cat(name,colour){
+            this.name = name;
+            this.colour = colour;
+        }
+        
+          function Animals(name){
+            this.name = name;
+            this.barke = function(){
+                return this.name
+            };
+        }
+        
+        var cat1 = new Cat('pis','red');
+        var cat2 = new Animals('uncle');
+        
+#### 问题：如何让Cat类继承Animals类的方法？
+
+### 4.1 通过构造函数apply绑定
+            
+        function Animals(name){
+            this.name = name;
+            this.barke = function(){
+                return this.name
+            };
+        }
+        
+          function Cat(name,colour){
+            Animals.apply(this)；// 把Animals构造函数绑定到Cat构造函数上
+            this.name = name;
+            this.colour = colour;
+        }
+            var cat1 = new Cat('pis','red');
+            cat1.name // pis
+            cat1.barke() // pis
+        
+    1)通过把Animals的构造函数绑定在Cat的构造函数上，这样当Cat生成的实例对象访问barke属性的时候，就会掉用Animals对象的barke方法
+    2)需要注意的是，如果animals和cat类中有相同的属性或者方法会被覆盖，所以在本例中，是先绑定了animals的构造函数是的cat有了barke的方法，然后在对cat的静态方法进行get，set赋值，因为name属性会被覆盖
+    
+         function Cat(name,colour){
+            this.name = name;
+            this.colour = colour;
+            Animals.apply(this)；// 这个写到下面
+        }
+            var cat1 = new Cat('pis','red');
+            cat1.name // undefined
+            cat1.barke() // undefined
+            
+### 4.2 prototype模式
+
+#### 4.2.1 背景知识铺垫
+- 构造函数都有一个prototype对象，通过new操作生成的实例对象都能继承prototype上的属性和方法
+- 在new操作生成实例的时候，先将prototype对象给实例对象，再将构造函数上定义的静态或者本地属性和方法给实例对象
+    
+        // 构造函数
+        function TestClass(attr){
+            this.attr = attr;
+            this.method = function(){};
+            prototype:{
+                constructor:TestClass // 指向构造函数
+                otherAttr:'',
+                otherMethd:function(){}
+            }
+        }
+        
+        // 实例对象
+        var test1 = new TestClass(attr);
+        
+所以  
+         
+         1)它相当于完全删除了prototype 对象原先的值，然后赋予一个新值。
+         Cat.prototype = new Animal(); 
+         2)Cat.prototype.constructor是指向Cat的；加了这一行以后，Cat.prototype.constructor指向Animal
+         Cat.prototype.constructor = Cat;
+         3)var cat1 = new Cat("大毛","黄色");
+         4)alert(cat1.species); // 动物
